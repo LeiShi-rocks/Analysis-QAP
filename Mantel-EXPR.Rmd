@@ -1,0 +1,797 @@
+---
+title: "Simulation"
+author: "Lei Shi"
+date: "2022-10-15"
+output: pdf_document
+always_allow_html: yes
+---
+
+
+
+```{r}
+setwd("~/Documents/GitHub/Analysis-QAP")
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(mvtnorm)
+library(plotly)
+library(mvtnorm)
+library(latex2exp)
+
+
+DIPS_DECOMP = function(M){
+  n = nrow(M)
+  m0 = sum(M)/(n*(n-1))
+  mbar = apply(M - m0, MARGIN = 1, sum)/(n-2)
+  M0 = outer(1:n, 1:n, Vectorize(function(x,y) {M(x,y) - mbar(x) - mbar(y) + m0}))
+  m12 = mean(mbar^2)
+  m22 = sum(M0^2)/(n(n-1))
+  list(m0, mbar, M0, m12, m22)
+}
+```
+
+
+# random N(0,1) matrix
+```{r}
+# matrix permutations
+
+n = 1e2
+
+A = matrix(rnorm(n^2), nrow = n)
+B = matrix(rnorm(n^2), nrow = n)
+diag(A) = 0
+diag(B) = 0
+sum(A*B)
+
+MC = 1e4
+
+record = data.frame(
+  DIPS = rep(0, MC),
+  TWOWAY = rep(0, MC),
+  VEC  = rep(0, MC)
+)
+
+record_F = data.frame(
+  DIPS = rep(0, MC),
+  TWOWAY = rep(0, MC),
+  VEC  = rep(0, MC)
+)
+```
+
+```{r eval=FALSE, include=FALSE}
+plot_ly(z = A, type = "surface")
+```
+
+```{r}
+# DIPS permutation
+record$DIPS = sapply(1:MC,
+                     function(x){
+                       permInd = sample(1:n)
+                       sum(A * B[permInd, permInd])
+                     })
+
+```
+
+```{r}
+# TWOWAY permutation
+record$TWOWAY = sapply(1:MC,
+                     function(x){
+                       permInd_1 = sample(1:n)
+                       permInd_2 = sample(1:n)
+                       sum(A * B[permInd_1, permInd_2])
+                     })
+
+```
+
+```{r}
+# VEC permutation
+Avec = c(A)
+Bvec = c(B)
+record$VEC = sapply(1:MC,
+                     function(x){
+                       permInd = sample(1:(n^2))
+                       sum(Avec * Bvec[permInd])
+                     })
+
+```
+
+
+```{r}
+var(record)
+```
+
+
+```{r}
+record %>% gather(key = "PermType", value = "Correlation") %>%
+  ggplot(aes(x = Correlation)) + 
+  geom_histogram(aes(y = ..density..)) + 
+  facet_wrap(vars(PermType), scales = "free_x") + 
+  theme_minimal()
+```
+
+
+# matrices with heterogeneity (simulation 1)
+```{r}
+# matrix permutations
+
+n = 1e2
+
+#A = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {exp((x-y)^2)}))
+#B = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {exp((x-y)^2)}))
+
+A = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {sin(x*(2*pi)) + sin(y*(2*pi))}))
+B = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {sin(x*(2*pi)) + sin(y*(2*pi))}))
+
+sum(A*B)
+
+MC = 1e4
+
+record = data.frame(
+  DIPS = rep(0, MC),
+  TWOWAY = rep(0, MC),
+  VEC  = rep(0, MC)
+)
+
+record_F = data.frame(
+  DIPS = rep(0, MC),
+  TWOWAY = rep(0, MC),
+  VEC  = rep(0, MC)
+)
+
+diag(A) = 0
+diag(B) = 0
+A = A/sqrt(sum(A^2))
+B = B/sqrt(sum(B^2))
+
+```
+
+```{r eval=FALSE, include=FALSE}
+plot_ly(z = A, type = "surface")
+```
+
+
+
+```{r}
+# DIPS permutation
+record$DIPS = sapply(1:MC,
+                     function(x){
+                       permInd = sample(1:n)
+                       sum(A * B[permInd, permInd])
+                     })
+
+record_F$DIPS = sapply(1:MC,
+                       function(x){
+                         permInd = sample(1:n)
+                         summary(lm(c(A) ~ -1 + c(B[permInd, permInd])))$coefficients[3]
+                       })
+```
+
+```{r}
+# TWOWAY permutation
+record$TWOWAY = sapply(1:MC,
+                     function(x){
+                       permInd_1 = sample(1:n)
+                       permInd_2 = sample(1:n)
+                       sum(A * B[permInd_1, permInd_2])
+                     })
+record_F$TWOWAY = sapply(1:MC,
+                       function(x){
+                         permInd_1 = sample(1:n)
+                         permInd_2 = sample(1:n)
+                         summary(lm(c(A) ~ -1 + c(B[permInd_1, permInd_2])))$coefficients[3]
+                       })
+```
+
+```{r}
+# VEC permutation
+Avec = c(A)
+Bvec = c(B)
+record$VEC = sapply(1:MC,
+                     function(x){
+                       permInd = sample(1:(n^2))
+                       sum(Avec * Bvec[permInd])
+                     })
+record_F$VEC = sapply(1:MC,
+                       function(x){
+                         permInd = sample(1:(n^2))
+                         summary(lm(Avec ~ -1 + Bvec[permInd]))$coefficients[3]
+                       })
+```
+
+
+```{r}
+var(record)
+
+var(record_F)
+```
+
+
+```{r}
+record %>% gather(key = "PermType", value = "Correlation") %>%
+  ggplot(aes(x = Correlation)) + 
+  geom_histogram(aes(y = ..density..)) + 
+  facet_wrap(vars(PermType), scales = "free_x") + 
+  theme_minimal()
+
+record_F %>% gather(key = "PermType", value = "Correlation") %>%
+  ggplot(aes(x = Correlation)) + 
+  geom_histogram(aes(y = ..density..)) + 
+  facet_wrap(vars(PermType), scales = "free_x") + 
+  theme_minimal()
+```
+
+
+
+# matrices with heterogeneity (simulation 2)
+```{r}
+# matrix permutations
+
+n = 1e2
+
+A = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {exp((x-y)^2) - 1}))
+B = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {exp((x-y)^2) - 1}))
+
+sum(A*B)
+
+MC = 1e4
+
+record = data.frame(
+  DIPS = rep(0, MC),
+  TWOWAY = rep(0, MC),
+  VEC  = rep(0, MC)
+)
+
+
+```
+
+```{r eval=FALSE, include=FALSE}
+plot_ly(z = A, type = "surface")
+```
+
+
+
+```{r}
+# DIPS permutation
+record$DIPS = sapply(1:MC,
+                     function(x){
+                       permInd = sample(1:n)
+                       sum(A * B[permInd, permInd])
+                     })
+
+```
+
+```{r}
+# TWOWAY permutation
+record$TWOWAY = sapply(1:MC,
+                     function(x){
+                       permInd_1 = sample(1:n)
+                       permInd_2 = sample(1:n)
+                       sum(A * B[permInd_1, permInd_2])
+                     })
+
+```
+
+```{r}
+# VEC permutation
+Avec = c(A)
+Bvec = c(B)
+record$VEC = sapply(1:MC,
+                     function(x){
+                       permInd = sample(1:(n^2))
+                       sum(Avec * Bvec[permInd])
+                     })
+
+```
+
+
+```{r}
+var(record)
+```
+
+
+```{r}
+record %>% gather(key = "PermType", value = "Correlation") %>%
+  ggplot(aes(x = Correlation)) + 
+  geom_histogram(aes(y = ..density..)) + 
+  facet_wrap(vars(PermType), scales = "free_x") + 
+  theme_minimal()
+```
+
+
+
+
+## Are Mantel tests robust to weak nulls?
+```{r}
+# matrix permutations
+
+n = 1e2
+
+# A = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {exp((x-y)^2) - 1}))
+X = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {exp((x-y)^2) - 1}))
+E = matrix(rnorm(1e4, mean = 0, sd = 0.1), nrow = n)
+diag(E) = 0
+Y = X + E
+
+# sum(A*B)
+
+MC = 1e4
+
+record_ST = data.frame(
+  DIPS = rep(0, MC),
+  TWOWAY = rep(0, MC),
+  VEC  = rep(0, MC)
+)
+
+# DIPS permutation
+record_ST$DIPS = sapply(1:MC,
+                     function(x){
+                       permInd = sample(1:n)
+                       cor(c(Y[permInd, permInd]), c(X))
+                     })
+
+# TWOWAY permutation
+record_ST$TWOWAY = sapply(1:MC,
+                     function(x){
+                       permInd_1 = sample(1:n)
+                       permInd_2 = sample(1:n)
+                       # summary(lm(c(Y[permInd_1, permInd_2]) ~ -1 + c(X)))$coefficients[1,3]
+                       cor(c(Y[permInd_1, permInd_2]), c(X))
+                       # sum(A * B[permInd_1, permInd_2])
+                     })
+
+# VEC permutation
+Xvec = c(X)
+Yvec = c(Y)
+record_ST$VEC = sapply(1:MC,
+                     function(x){
+                       permInd = sample(1:(n^2))
+                       # sum(Avec * Bvec[permInd])
+                       # summary(lm(c(Yvec[permInd]) ~ -1 + c(Xvec)))$coefficients[1,3]
+                       cor(c(Yvec[permInd]), c(Xvec))
+                     })
+
+```
+
+
+```{r}
+var(record_ST)
+```
+
+
+
+```{r}
+record_ST %>% gather(key = "PermType", value = "Correlation") %>%
+  ggplot(aes(x = Correlation)) + 
+  geom_histogram(aes(y = ..density..)) + 
+  facet_wrap(vars(PermType), scales = "free_x") + 
+  theme_minimal()
+```
+
+# 04/28 version
+
+## Preliminary results
+```{r}
+super.pop = function(A, B) {
+  n = nrow(A)
+  
+  # Analysis based on U-statistics
+  abar = 1/(n*(n-1)) * sum(A)
+  bbar = 1/(n*(n-1)) * sum(B)
+  chat = 1/(n*(n-1)) * sum((A -abar) * (B - bbar))
+  vAhat = 1/(n*(n-1)) * sum((A - abar)^2)
+  vBhat = 1/(n*(n-1)) * sum((B - bbar)^2)
+  rhohat = chat/(sqrt(vAhat * vBhat))
+  
+  # Variance estimation
+  Acenter = A  - abar
+  Bcenter = B  - bbar
+  AB = Acenter * Bcenter
+  diag(AB) = 0
+  vPhat = 4 * (n-1)/((n-2)*(n-4)) * sum((rowSums(AB, dim = 1L) / (n-1))^2) / (vAhat * vBhat)
+  
+  # report results
+  list(
+    abar = abar,
+    bbar = bbar,
+    chat = chat,
+    vAhat = vAhat,
+    vBhat = vBhat,
+    rhohat = rhohat,
+    vPhat = vPhat
+  )
+}
+```
+
+
+## Variance kernel
+
+```{r}
+# matrix permutations
+# data generating process
+
+n = 1e3
+p = 2
+rho = sqrt(3)/2
+sigma = 1
+mu = rep(0, p)
+Sigma = matrix(c(sigma^2, rho, rho, sigma^2), nrow = 2)
+
+c0 = 0.25*(2*(sigma^2 + 2*rho^2) + 2*sigma^4 + 4*rho^2) - sigma^4
+# rho = 
+
+RS = rmvnorm(n, mean = mu, sigma = Sigma)
+
+
+# A = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {exp((x-y)^2) - 1}))
+A = outer(1:n, 1:n, Vectorize(function(x,y) {(RS[x, 1] - RS[y, 1])^2/2}))
+B = outer(1:n, 1:n, Vectorize(function(x,y) {(RS[x, 2] - RS[y, 2])^2/2}))
+```
+
+
+```{r}
+# Analysis based on U-statistics
+Abar = 1/(n*(n-1)) * sum(A)
+Bbar = 1/(n*(n-1)) * sum(B)
+chat = 1/(n*(n-1)) * sum((A - Abar) * (B - Bbar))
+vAhat = 1/(n*(n-1)) * sum((A - Abar)^2)
+vBhat = 1/(n*(n-1)) * sum((B - Bbar)^2)
+rhohat = chat/(sqrt(vAhat * vBhat))
+```
+
+
+```{r}
+Y = X + E
+
+# sum(A*B)
+
+MC = 1e4
+
+record_ST = data.frame(
+  DIPS = rep(0, MC),
+  TWOWAY = rep(0, MC),
+  VEC  = rep(0, MC)
+)
+
+# DIPS permutation
+record_ST$DIPS = sapply(1:MC,
+                     function(x){
+                       permInd = sample(1:n)
+                       cor(c(Y[permInd, permInd]), c(X))
+                     })
+
+# TWOWAY permutation
+record_ST$TWOWAY = sapply(1:MC,
+                     function(x){
+                       permInd_1 = sample(1:n)
+                       permInd_2 = sample(1:n)
+                       # summary(lm(c(Y[permInd_1, permInd_2]) ~ -1 + c(X)))$coefficients[1,3]
+                       cor(c(Y[permInd_1, permInd_2]), c(X))
+                       # sum(A * B[permInd_1, permInd_2])
+                     })
+
+# VEC permutation
+Xvec = c(X)
+Yvec = c(Y)
+record_ST$VEC = sapply(1:MC,
+                     function(x){
+                       permInd = sample(1:(n^2))
+                       # sum(Avec * Bvec[permInd])
+                       # summary(lm(c(Yvec[permInd]) ~ -1 + c(Xvec)))$coefficients[1,3]
+                       cor(c(Yvec[permInd]), c(Xvec))
+                     })
+
+```
+
+
+
+## Walsh averages kernel
+
+### Conservative permutation test
+
+```{r dependent-rho-0}
+# matrix permutations
+# data generating process
+set.seed(2023)
+U = runif(n, min = 0, max = 2*pi)
+R = sqrt(2) * sin(U)
+S = sqrt(2) * cos(U)
+
+# rho = 0
+
+# A = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {exp((x-y)^2) - 1}))
+A = outer(1:n, 1:n, Vectorize(function(x,y) {(R[x] + R[y])/sqrt(2)}))
+B = outer(1:n, 1:n, Vectorize(function(x,y) {(S[x] + S[y])/sqrt(2)}))
+diag(A) = 0
+diag(B) = 0
+
+# 
+```
+
+```{r Super-Pop-Distribution}
+MC = 2e3
+n = 5e2
+
+record_super = data.frame(
+  stat_NS = rep(0, MC),
+  stat_S = rep(0, MC)
+)
+
+for (iter in 1:MC){
+  # print(paste("iter", as.character(iter)))
+  
+  U = runif(n, min = 0, max = 2*pi)
+  R = sqrt(2) * sin(U)
+  S = sqrt(2) * cos(U)
+  
+  A = outer(1:n, 1:n, Vectorize(function(x,y) {(R[x] + R[y])/sqrt(2)}))
+  B = outer(1:n, 1:n, Vectorize(function(x,y) {(S[x] + S[y])/sqrt(2)}))
+  diag(A) = 0
+  diag(B) = 0
+  
+  res = super.pop(A, B)
+  
+  record_super$stat_NS[iter] = sqrt(n) * res$rhohat
+  record_super$stat_S[iter] = sqrt(n) * res$rhohat/sqrt(res$vPhat)
+}
+
+
+```
+
+```{r super, fig.height=3, fig.width=3}
+# visualization
+record_super = record_super[,1:2]
+position_x = rep(seq(-4, 4, length.out = MC), 6)
+normal_density = dnorm(position_x)
+record_super = cbind(record_super, position_x, normal_density)
+
+super_non_student = record_super %>% ggplot(aes(x = stat_NS)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.20) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) +
+  xlab(TeX(r"( $\sqrt{n}\hat{\rho}$ )")) + 
+  theme_classic(base_size = 20)
+
+super_student = record_super %>% ggplot(aes(x = stat_S)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.20) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) + 
+  xlab(TeX(r"( $\sqrt{n}\hat{\rho}/\hat{v}_P$ )")) + 
+  theme_classic(base_size = 20)
+
+super_non_student
+super_student
+
+ggsave("super_non_student.png", super_non_student, device = "png")
+ggsave("super_student.png", super_student, device = "png")
+```
+
+
+
+
+```{r permutational}
+set.seed(2023)
+
+U = runif(n, min = 0, max = 2*pi)
+R = sqrt(2) * sin(U)
+S = sqrt(2) * cos(U)
+
+# rho = 0
+
+# A = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {exp((x-y)^2) - 1}))
+A = outer(1:n, 1:n, Vectorize(function(x,y) {(R[x] + R[y])/sqrt(2)}))
+B = outer(1:n, 1:n, Vectorize(function(x,y) {(S[x] + S[y])/sqrt(2)}))
+diag(A) = 0
+diag(B) = 0
+
+MC = 2e3
+
+record_perm = data.frame(
+  stat_NS = rep(0, MC),
+  stat_S = rep(0, MC)
+)
+
+# DIPS permutation
+for (iter in 1:MC){
+  permInd = sample(1:n)
+  res = super.pop(A[permInd, permInd], B)
+  record_perm$stat_NS[iter] = sqrt(n) * res$rhohat
+  record_perm$stat_S[iter] = sqrt(n) * res$rhohat/sqrt(res$vPhat)
+}
+
+
+
+```
+
+```{r fig.height=3, fig.width=3}
+# visualization
+record_perm = record_perm[,1:2]
+position_x = rep(seq(-4, 4, length.out = MC), 6)
+normal_density = dnorm(position_x)
+record_perm = cbind(record_perm, position_x, normal_density)
+
+perm_non_student = record_perm %>% ggplot(aes(x = stat_NS)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.20) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) + 
+  xlab(TeX(r"( $\sqrt{n}\hat{\rho}^\pi$ )")) + 
+  theme_classic(base_size = 20)
+
+perm_student = record_perm %>% ggplot(aes(x = stat_S)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.20) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) +
+  xlab(TeX(r"( $\sqrt{n}\hat{\rho}^\pi/\hat{v}_P^\pi$ )")) + 
+  theme_classic(base_size = 20)
+
+perm_non_student
+perm_student
+
+ggsave("perm_non_student.png", perm_non_student, device = "png")
+ggsave("perm_student.png", perm_student, device = "png")
+```
+
+
+
+### Anti-conservative permutation test
+
+```{r}
+k = 19
+# integrand <- function(x) {x^(2*k)}
+integrand <- function(x) {sinh(3*x)^2}
+res_sq <- integrate(integrand, lower = -2*pi, upper = 2*pi)
+```
+
+
+```{r dependent-rho-0-anti}
+# matrix permutations
+# data generating process
+MC = 2e3
+n = 5e4
+
+# set.seed(2023)
+U = runif(n, min = -2*pi, max = 2*pi)
+# R = U^k / sqrt(res$value / (4*pi))
+R = sinh(3*U) / sqrt(res_sq$value / (4*pi))
+S = sqrt(2) * cos(U)
+
+# rho = 0
+
+# A = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {exp((x-y)^2) - 1}))
+# A = outer(1:n, 1:n, Vectorize(function(x,y) {(R[x] + R[y])/sqrt(2)}))
+# B = outer(1:n, 1:n, Vectorize(function(x,y) {(S[x] + S[y])/sqrt(2)}))
+# diag(A) = 0
+# diag(B) = 0
+
+# 
+mean(R^2*S^2)
+```
+
+
+```{r Super-Pop-Distribution-anti}
+MC = 2e3
+n = 5e2
+
+integrand <- function(x) {sinh(3*x)^2}
+res_sq <- integrate(integrand, lower = -2*pi, upper = 2*pi)
+
+record_super = data.frame(
+  stat_NS = rep(0, MC),
+  stat_S = rep(0, MC)
+)
+
+for (iter in 1:MC){
+  print(paste("iter", as.character(iter)))
+  
+  U = runif(n, min = -2*pi, max = 2*pi)
+  R = sinh(3*U) / sqrt(res_sq$value / (4*pi))
+  S = sqrt(2) * cos(U)
+  
+  A = outer(1:n, 1:n, Vectorize(function(x,y) {(R[x] + R[y])/sqrt(2)}))
+  B = outer(1:n, 1:n, Vectorize(function(x,y) {(S[x] + S[y])/sqrt(2)}))
+  diag(A) = 0
+  diag(B) = 0
+  
+  res = super.pop(A, B)
+  
+  record_super$stat_NS[iter] = sqrt(n) * res$rhohat
+  record_super$stat_S[iter] = sqrt(n) * res$rhohat/sqrt(res$vPhat)
+}
+
+saveRDS(record_super, file = "record_super_anti.rds")
+
+```
+
+
+```{r super-anti, fig.height=3, fig.width=3}
+# visualization
+record_super = record_super[,1:2]
+position_x = rep(seq(-4, 4, length.out = MC), 6)
+normal_density = dnorm(position_x)
+record_super = cbind(record_super, position_x, normal_density)
+
+super_non_student = record_super %>% ggplot(aes(x = stat_NS)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.20) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) +
+  xlab(TeX(r"( $\sqrt{n}\hat{\rho}$ )")) + 
+  theme_classic(base_size = 20)
+
+super_student = record_super %>% ggplot(aes(x = stat_S)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.20) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) + 
+  xlab(TeX(r"( $\sqrt{n}\hat{\rho}/\hat{v}_P$ )")) + 
+  theme_classic(base_size = 20)
+
+super_non_student
+super_student
+
+ggsave("super_non_student_anti.png", super_non_student, device = "png")
+ggsave("super_student_anti.png", super_student, device = "png")
+```
+
+
+
+
+
+
+```{r permutational-anti}
+set.seed(2023)
+
+integrand <- function(x) {sinh(3*x)^2}
+res_sq <- integrate(integrand, lower = -2*pi, upper = 2*pi)
+
+U = runif(n, min = -2*pi, max = 2*pi)
+R = sinh(3*U) / sqrt(res_sq$value / (4*pi))
+S = sqrt(2) * cos(U)
+
+# rho = 0
+
+# A = outer(1:n/n, 1:n/n, Vectorize(function(x,y) {exp((x-y)^2) - 1}))
+A = outer(1:n, 1:n, Vectorize(function(x,y) {(R[x] + R[y])/sqrt(2)}))
+B = outer(1:n, 1:n, Vectorize(function(x,y) {(S[x] + S[y])/sqrt(2)}))
+diag(A) = 0
+diag(B) = 0
+
+MC = 2e3
+
+record_perm = data.frame(
+  stat_NS = rep(0, MC),
+  stat_S = rep(0, MC)
+)
+
+# DIPS permutation
+for (iter in 1:MC){
+  permInd = sample(1:n)
+  res = super.pop(A[permInd, permInd], B)
+  record_perm$stat_NS[iter] = sqrt(n) * res$rhohat
+  record_perm$stat_S[iter] = sqrt(n) * res$rhohat/sqrt(res$vPhat)
+}
+
+
+
+```
+
+```{r fig.height=3, fig.width=3}
+# visualization
+record_perm = record_perm[,1:2]
+position_x = rep(seq(-4, 4, length.out = MC), 6)
+normal_density = dnorm(position_x)
+record_perm = cbind(record_perm, position_x, normal_density)
+
+perm_non_student = record_perm %>% ggplot(aes(x = stat_NS)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.2) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) + 
+  xlab(TeX(r"( $\sqrt{n}\hat{\rho}^\pi$ )")) + 
+  theme_classic(base_size = 20)
+
+perm_student = record_perm %>% ggplot(aes(x = stat_S)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.2) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) +
+  xlab(TeX(r"( $\sqrt{n}\hat{\rho}^\pi/\hat{v}_P^\pi$ )")) + 
+  theme_classic(base_size = 20)
+
+perm_non_student
+perm_student
+
+ggsave("perm_non_student_anti.png", perm_non_student, device = "png")
+ggsave("perm_student_anti.png", perm_student, device = "png")
+```
+
+
+
+

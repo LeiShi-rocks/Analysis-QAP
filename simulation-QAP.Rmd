@@ -1,0 +1,187 @@
+---
+title: "simulation-QAP"
+author: "Lei Shi"
+date: "2024-06-17"
+output: pdf_document
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(latex2exp)
+source("QAPpro.R")
+```
+
+
+```{r}
+# population setup 
+n = 2.5e2
+
+# Generate data with Walsh average
+R = rnorm(n)
+S = R * rnorm(n)
+
+A = outer(1:n, 1:n, Vectorize(function(x, y) {(R[x] + R[y])/sqrt(2)}))
+B = outer(1:n, 1:n, Vectorize(function(x, y) {(S[x] + S[y])/sqrt(2)}))
+
+diag(A) = 0
+diag(B) = 0
+```
+
+
+```{r}
+fit.lm = lm(c(B) ~ c(A))
+cluster0 = factor(rep(1:n, each = n))
+res = vcovCR(
+  fit.lm,
+  cluster = cluster0,
+  type = "CR0"
+)
+```
+
+
+# Experiments for sampling distribution
+
+```{r}
+set.seed(2024)
+MC = 2e3
+n = 2.5e2
+rho = 0.5
+record_stat = data.frame(
+  stat_NS = rep(0, MC),
+  stat_S = rep(0, MC)
+) 
+
+for (iter in 1:MC){
+  # print iteration
+  print(iter)
+  
+  # Generate data with Walsh average
+  R1 = rnorm(n)
+  R2 = rho * R1 + sqrt(1 - rho^2) * rnorm(n)
+  S = R1 * rnorm(n)
+    
+  E = outer(1:n, 1:n, Vectorize(function(x, y) {(S[x] + S[y])/sqrt(2)}))
+  B1 = outer(1:n, 1:n, Vectorize(function(x, y) {(R1[x] + R1[y])/sqrt(2)}))
+  B2 = outer(1:n, 1:n, Vectorize(function(x, y) {(R2[x] + R2[y])/sqrt(2)}))
+  
+  A = B2 + E
+    
+  diag(A) = 0
+  diag(B1) = 0
+  diag(B2) = 0
+    
+  data_list = list(A = A, B1 = B1, B2 = B2)
+  res = dyadicLM("A ~ B1 + B2", data_list)
+  coefs = res$coefs
+  var_mat = res$var_mat
+  
+  record_stat$stat_NS[iter] = sqrt(n) * coefs[2]
+  record_stat$stat_S[iter] = coefs[2]/sqrt(var_mat[2,2])
+}
+position_x = rep(seq(-4, 4, length.out = MC), 6)
+normal_density = dnorm(position_x)
+record_stat = cbind(record_stat, position_x, normal_density)
+```
+
+
+## save data
+```{r}
+saveRDS(record_stat, file = "record_stat_MRQAP.rds")
+```
+
+## plot
+```{r fig.height=3, fig.width=3}
+sampling_NS = record_stat %>% ggplot(aes(x = stat_NS)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.25) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) + 
+  xlab(TeX(r"( $\sqrt{n}\hat{\vartheta}$ )")) + 
+  theme_classic(base_size = 20)
+
+sampling_S = record_stat %>% ggplot(aes(x = stat_S)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.25) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) + 
+  xlab(TeX(r"( $W$ )")) + 
+  theme_classic(base_size = 20)
+
+ggsave("sampling_NS_MAQAP.png", sampling_NS, device = "png", width = 6, height = 6)
+ggsave("sampling_S_MAQAP.png", sampling_S, device = "png", width = 6, height = 6)
+```
+
+
+
+# Experiments for permutation distribution
+
+```{r}
+# permutation test
+set.seed(2024)
+n = 2.5e2
+
+# Generate data with Walsh average
+R1 = rnorm(n)
+R2 = rho * R1 + sqrt(1 - rho^2) * rnorm(n)
+S = R1 * rnorm(n)
+
+E = outer(1:n, 1:n, Vectorize(function(x, y) {(S[x] + S[y])/sqrt(2)}))
+B1 = outer(1:n, 1:n, Vectorize(function(x, y) {(R1[x] + R1[y])/sqrt(2)}))
+B2 = outer(1:n, 1:n, Vectorize(function(x, y) {(R2[x] + R2[y])/sqrt(2)}))
+  
+A = B2 + E
+    
+diag(A) = 0
+diag(B1) = 0
+diag(B2) = 0
+
+
+MC = 2e3
+record_perm = data.frame(
+  stat_NS = rep(0, MC),
+  stat_S = rep(0, MC)
+) 
+
+for (iter in 1:MC){
+  print(iter)
+  permInd = sample(1:n)
+  data_list = list(A = A, B1 = B1[permInd, permInd], B2 = B2)
+  res = dyadicLM("A ~ B1 + B2", data_list)
+  coefs = res$coefs
+  var_mat = res$var_mat
+  
+  record_perm$stat_NS[iter] = sqrt(n) * coefs[2]
+  record_perm$stat_S[iter] = coefs[2]/sqrt(var_mat[2,2])
+}
+
+position_x = rep(seq(-4, 4, length.out = MC), 6)
+normal_density = dnorm(position_x)
+record_perm = cbind(record_perm, position_x, normal_density)
+
+
+```
+
+
+## saving data
+```{r}
+saveRDS(record_perm, file = "record_perm_MRQAP.rds")
+```
+
+## plot
+```{r fig.height=3, fig.width=3}
+perm_non_student = record_perm %>% ggplot(aes(x = stat_NS)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.25) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) + 
+  xlab(TeX(r"( $\sqrt{n}\hat{\vartheta}^\pi$ )")) + 
+  theme_classic(base_size = 20)
+
+perm_student = record_perm %>% ggplot(aes(x = stat_S)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.25) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) +
+  xlab(TeX(r"( $W^\pi$ )")) + 
+  theme_classic(base_size = 20)
+
+perm_non_student
+perm_student
+
+ggsave("perm_NS_MAQAP.png", perm_non_student, device = "png", width = 6, height = 6)
+ggsave("perm_S_MAQAP.png", perm_student, device = "png", width = 6, height = 6)
+```
+

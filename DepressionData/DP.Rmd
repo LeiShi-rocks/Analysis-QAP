@@ -1,0 +1,202 @@
+---
+title: "DP"
+author: "Lei Shi"
+date: "2024-06-28"
+output: pdf_document
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(latex2exp)
+source("~/Documents/GitHub/Analysis-QAP/QAPpro.R")
+```
+
+
+```{r}
+# load the data
+load("~/Documents/GitHub/Analysis-QAP/DepressionData/DP.rdata")
+```
+
+
+```{r}
+set.seed(2024)
+n = 2.5e2
+rho = 0.5
+
+# Generate data with Walsh average
+R1 = rnorm(n)
+R2 = rho * R1 + sqrt(1 - rho^2) * rnorm(n)
+S = R1 * rnorm(n)
+
+E = outer(1:n, 1:n, Vectorize(function(x, y) {(S[x] + S[y])/sqrt(2)}))
+B1 = outer(1:n, 1:n, Vectorize(function(x, y) {(R1[x] + R1[y])/sqrt(2)}))
+B2 = outer(1:n, 1:n, Vectorize(function(x, y) {(R2[x] + R2[y])/sqrt(2)}))
+  
+A = B2 + E
+    
+diag(A) = 0
+diag(B1) = 0
+diag(B2) = 0
+
+data_list = list(A = A, B1 = B1, B2 = B2)
+res = dyadicLM("A ~ B1 + B2", data_list)
+coefs = res$coefs
+var_mat = res$var_mat
+
+coefs
+var_mat
+```
+
+```{r}
+QAPpro(form = "A ~ B1 + B2", 
+      data_list = data_list, 
+      mode = "permute-e", 
+      num_perms = 100,
+      var_scheme = "CR0", 
+      plot.flag = F,
+      nameX.target = c("B1")
+      )
+```
+
+## analyze data with QAP
+1 # dummy matrix at least one female 
+2 # dummy matrix both female
+3 # age mean (centered)
+4 # age similarity # random data, for anonymity reasons
+5 # one student organization # random data, for anonymity reasons
+6 # same student status (being in a student organization)
+7 # being friends 
+8 # depression mean -> testing the depression-isolation hypothesis
+9 # depression similarity -> testing the depression-homphily hypothesis
+10 # depression mean * depression similarity  
+11 # depression mean * being friends -> testing the depression-friendship hypothesis
+
+```{r}
+data_list = c(dvs[1], ivs[[1]][2:12])
+names(data_list) = c("Y", paste0("X", 1:11))
+
+QAP_res = QAPpro(form = "Y ~ X1 + X2 + X3 + X4 + X7 + X8 + X9 + X10 + X11", 
+      data_list = data_list, 
+      mode = "permute-X", 
+      num_perms = 2000,
+      var_scheme = "CR0", 
+      plot.flag = F, 
+      nameX.target = c("X8", "X9", "X10", "X11"),
+      user.seed = 2024
+      )
+```
+
+```{r}
+QAP_res$report
+```
+
+
+### Depression level randomization plot
+```{r}
+position_x = rep(seq(-4, 4, length.out = 2000), 6)
+normal_density = dnorm(position_x)
+record_stat = data.frame(stat_S = QAP_res$record_perm_S[, 1],
+                         position_x = position_x,
+                         normal_density = normal_density)
+```
+
+
+
+```{r}
+# plot permutation distribution
+# hist(QAP_res$record_perm_S[, 1])
+
+hist_plot1 = record_stat %>% ggplot(aes(x = stat_S)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.3) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) + 
+  xlab(TeX(r"( $\sqrt{n}W_{Mean}^\pi$ )")) + 
+  theme_classic(base_size = 20)
+hist_plot1
+
+ggsave("DPLevel.png", hist_plot1, device = "png", width = 6, height = 6)
+```
+
+
+### Depression similarity randomization plot
+```{r}
+position_x = rep(seq(-4, 4, length.out = 2000), 6)
+normal_density = dnorm(position_x)
+record_stat = data.frame(stat_S = QAP_res$record_perm_S[, 2],
+                         position_x = position_x,
+                         normal_density = normal_density)
+```
+
+
+
+```{r}
+# plot permutation distribution
+# hist(QAP_res$record_perm_S[, 1])
+
+hist_plot2 = record_stat %>% ggplot(aes(x = stat_S)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.30) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) + 
+  xlab(TeX(r"( $\sqrt{n}W_{Similarity}^\pi$ )")) + 
+  theme_classic(base_size = 20)
+hist_plot2
+
+ggsave("DPSimilarity.png", hist_plot2, device = "png", width = 6, height = 6)
+```
+
+
+```{r}
+data_list = c(dvs[2], ivs[[2]][2:12])
+names(data_list) = c("Y", paste0("X", 1:11))
+
+QAPpro(form = "Y ~ X1 + X2 + X3 + X4 + X7 + X8 + X9 + X10 + X11", 
+      data_list = data_list, 
+      mode = "permute-e", 
+      num_perms = 1000,
+      var_scheme = "CR0", 
+      plot.flag = F, 
+#       nameX.target = c("X8", "X9", "X11"),
+      nameX.target = c("X8"),
+      user.seed = 2024
+      )
+```
+
+
+#### test with model 2
+```{r}
+data_list = c(dvs[1], ivs[[1]][2:12])
+names(data_list) = c("Y", paste0("X", 1:11))
+
+QAP_res = QAPpro(form = "Y ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9", 
+      data_list = data_list, 
+      mode = "permute-Y", 
+      num_perms = 2000,
+      var_scheme = "CR0", 
+      plot.flag = F, 
+      nameX.target = paste0("X", 8:9),
+      user.seed = 2024
+      )
+```
+```{r}
+QAP_res$report
+```
+
+```{r}
+position_x = rep(seq(-4, 4, length.out = 2000), 6)
+normal_density = dnorm(position_x)
+record_stat = data.frame(stat_S = QAP_res$record_perm_S[, 1],
+                         position_x = position_x,
+                         normal_density = normal_density)
+```
+
+
+
+```{r}
+# plot permutation distribution
+# hist(QAP_res$record_perm_S[, 1])
+
+record_stat %>% ggplot(aes(x = stat_S)) +
+  geom_histogram(aes(y = ..density..), col = "white", fill = "grey60", binwidth = 0.25) +
+  geom_line(aes(x = position_x, y = normal_density), lty = 2) + 
+  xlab(TeX(r"( $\sqrt{n}\hat{\vartheta}$ )")) + 
+  theme_classic(base_size = 20)
+```
