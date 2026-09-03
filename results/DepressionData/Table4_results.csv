@@ -1,0 +1,5 @@
+"term","coefs","t.stat","p.val","p.val.coefs.perm","p.val.t.perm"
+"Depression mean",-0.0670967001677385,-1.96806204214425,"0.0490609",0.1445,0.0475
+"Depression similarity",0.0692632686874717,1.31383586188428,"0.1889014",0.2695,0.1695
+"Depression mean x depression similarity",-0.00444997732587798,-1.21588879523798,"0.2240273",0.3865,0.225
+"Depression mean x friendship",0.0348042553423836,0.433325740276987,"0.6647781",0.595,0.61

@@ -1,4 +1,3 @@
-setwd("~/Documents/GitHub/Analysis-QAP")
 library(dplyr)
 library(ggplot2)
 library(latex2exp)
@@ -7,6 +6,7 @@ source("QAPpro.R")
 
 # ---- population setup ----
 
+set.seed(2024)
 n = 2.5e2
 
 R = rnorm(n)
@@ -39,8 +39,9 @@ record_stat = data.frame(
   stat_S = rep(0, MC)
 )
 
+message("Sampling distribution")
+pb = txtProgressBar(min = 0, max = MC, style = 3)
 for (iter in 1:MC){
-  print(iter)
 
   R1 = rnorm(n)
   R2 = rho * R1 + sqrt(1 - rho^2) * rnorm(n)
@@ -63,7 +64,9 @@ for (iter in 1:MC){
 
   record_stat$stat_NS[iter] = sqrt(n) * coefs[2]
   record_stat$stat_S[iter]  = coefs[2]/sqrt(var_mat[2,2])
+  setTxtProgressBar(pb, iter)
 }
+close(pb)
 
 saveRDS(record_stat, file = "results/Fig2/record_stat_MRQAP.rds")
 
@@ -114,8 +117,9 @@ record_perm = data.frame(
   stat_S = rep(0, MC)
 )
 
+message("Permutation distribution")
+pb = txtProgressBar(min = 0, max = MC, style = 3)
 for (iter in 1:MC){
-  print(iter)
   permInd = sample(1:n)
   data_list = list(A = A, B1 = B1[permInd, permInd], B2 = B2)
   res = dyadicLM("A ~ B1 + B2", data_list)
@@ -124,7 +128,9 @@ for (iter in 1:MC){
 
   record_perm$stat_NS[iter] = sqrt(n) * coefs[2]
   record_perm$stat_S[iter]  = coefs[2]/sqrt(var_mat[2,2])
+  setTxtProgressBar(pb, iter)
 }
+close(pb)
 
 saveRDS(record_perm, file = "results/Fig2/record_perm_MRQAP.rds")
 

@@ -86,6 +86,7 @@ Outputs saved to `results/DepressionData/`:
 
 | File | Description |
 |---|---|
+| `Table4_results.csv` | Numerical output: coefficients and normal, non-studentized QAP, and studentized QAP p-values. The first two rows reproduce Table 4; the remaining rows are the interaction-term analyses discussed in the text. |
 | `DPLevel.png` | Permutation distribution for depression mean coefficient |
 | `DPSimilarity.png` | Permutation distribution for depression similarity coefficient |
 
@@ -106,7 +107,7 @@ install.packages(c("dplyr", "tidyverse", "ggplot2", "mvtnorm",
 
 ### Running the scripts
 
-All scripts use `setwd("~/Documents/GitHub/Analysis-QAP")` at the top. Run each from the repo root:
+The scripts use relative paths. Set the working directory to your local clone of the repository root (for example, `setwd("/path/to/Analysis-QAP")`) before running them:
 
 ```bash
 Rscript Fig1.R     # ~30–40 min
@@ -114,14 +115,19 @@ Rscript Fig2.R     # ~40 min
 Rscript Table4.R   # ~1–2 min
 ```
 
-Or from within R:
+Or, from an R session started in the repository root:
 
 ```r
-setwd("~/Documents/GitHub/Analysis-QAP")
 source("Fig1.R")
 source("Fig2.R")
 source("Table4.R")
 ```
+
+### Reproducibility
+
+All stochastic computations use fixed seed 2024. In `Table4.R`, the main QAP analysis
+passes `user.seed = 2024` to `QAPpro()`, so its 2,000 permutations and the
+saved `Table4_results.csv` file are exactly reproducible.
 
 ### Regenerating figures only (without re-running simulations)
 

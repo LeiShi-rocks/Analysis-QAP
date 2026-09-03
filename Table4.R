@@ -1,4 +1,3 @@
-setwd("~/Documents/GitHub/Analysis-QAP")
 library(dplyr)
 library(ggplot2)
 library(latex2exp)
@@ -78,6 +77,21 @@ QAP_res = QAPpro(form = "Y ~ X1 + X2 + X3 + X4 + X7 + X8 + X9 + X10 + X11",
        )
 
 QAP_res$report
+
+# Save the numerical results.  The first two rows reproduce Table 4; the
+# remaining rows are the interaction terms discussed in the case study.
+table4_results = cbind(
+  term = c(
+    "Depression mean",
+    "Depression similarity",
+    "Depression mean x depression similarity",
+    "Depression mean x friendship"
+  ),
+  QAP_res$report
+)
+write.csv(table4_results,
+          "results/DepressionData/Table4_results.csv",
+          row.names = FALSE)
 
 
 # ---- Depression level randomisation plot ----
