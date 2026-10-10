@@ -6,3 +6,153 @@
 2026-09-03 23:52:17.394 [info] MCP server closed successfully
 2026-09-03 23:52:17.395 [debug] Cleanup completed successfully
 2026-09-03 23:52:17.395 [info] Graceful shutdown complete
+2026-10-09 16:57:24.120 [debug] Initializing ConfigManager from environment variables
+2026-10-09 16:57:24.122 [debug] Loaded config from environment (sensitive data redacted):
+2026-10-09 16:57:24.123 [debug] {
+  "host": "wiki.corp.adobe.com",
+  "authMethod": "[REDACTED]",
+  "port": 1984,
+  "assetsOutputDir": "./wiki-mcp/assets",
+  "assets": {
+    "extractAssets": false,
+    "outputDir": "./wiki-mcp/assets",
+    "filenamePrefix": "asset-",
+    "createOutputDirs": true,
+    "useAbsolutePath": true,
+    "assetTypes": [
+      "image",
+      "pdf",
+      "document",
+      "attachment",
+      "plantuml"
+    ]
+  }
+}
+2026-10-09 16:57:24.123 [debug] ConfigManager initialized
+2026-10-09 16:57:24.736 [info] Initializing MCP Server...
+2026-10-09 16:57:24.737 [info] 📦 Build ID: build_1780005691903_lo9dvvhel
+2026-10-09 16:57:24.738 [info] 📦 Version: 1.0.0-1780005691903
+2026-10-09 16:57:24.739 [info] 📦 Build Date: 2026-05-28T22:01:31.903Z
+2026-10-09 16:57:24.740 [info] 📦 Timestamp: 1780005691903
+2026-10-09 16:57:24.744 [debug] Creating authenticated Confluence client via AuthenticationManager
+2026-10-09 16:57:24.745 [debug] Normalized host: wiki.corp.adobe.com
+2026-10-09 16:57:24.745 [info] Using Personal Access Token authentication method
+2026-10-09 16:57:24.747 [info] Confluence client created successfully for host: wiki.corp.adobe.com
+2026-10-09 16:57:24.748 [info] Registered expert-wiki-editing-workflow prompt
+2026-10-09 16:57:24.749 [info] Registered expert-wiki-editor prompt
+2026-10-09 16:57:24.750 [info] Registered plantuml_diagram_creator prompt
+2026-10-09 16:57:24.751 [info] Registered prompts: expert_wiki_editing_workflow, expert_wiki_editor, plantuml_diagram_creator
+2026-10-09 16:57:24.753 [info] Prompt "expert_wiki_editing_workflow" registered: has description=true, has callback=true
+2026-10-09 16:57:24.753 [info] Prompt "expert_wiki_editor" registered: has description=true, has callback=true
+2026-10-09 16:57:24.755 [info] Prompt "plantuml_diagram_creator" registered: has description=true, has callback=true
+2026-10-09 16:57:24.756 [info] MCP Server initialized successfully
+2026-10-09 16:57:24.758 [info] Wiki MCP Server connected via stdio
+2026-10-09 16:57:24.760 [info] Wiki MCP Server started successfully with stdio transport
+2026-10-09 16:57:24.811 [debug] Initializing ConfigManager from environment variables
+2026-10-09 16:57:24.813 [debug] Loaded config from environment (sensitive data redacted):
+2026-10-09 16:57:24.813 [debug] {
+  "host": "wiki.corp.adobe.com",
+  "authMethod": "[REDACTED]",
+  "port": 1984,
+  "assetsOutputDir": "./wiki-mcp/assets",
+  "assets": {
+    "extractAssets": false,
+    "outputDir": "./wiki-mcp/assets",
+    "filenamePrefix": "asset-",
+    "createOutputDirs": true,
+    "useAbsolutePath": true,
+    "assetTypes": [
+      "image",
+      "pdf",
+      "document",
+      "attachment",
+      "plantuml"
+    ]
+  }
+}
+2026-10-09 16:57:24.813 [debug] ConfigManager initialized
+2026-10-09 16:57:25.075 [info] Initializing MCP Server...
+2026-10-09 16:57:25.076 [info] 📦 Build ID: build_1780005691903_lo9dvvhel
+2026-10-09 16:57:25.076 [info] 📦 Version: 1.0.0-1780005691903
+2026-10-09 16:57:25.076 [info] 📦 Build Date: 2026-05-28T22:01:31.903Z
+2026-10-09 16:57:25.077 [info] 📦 Timestamp: 1780005691903
+2026-10-09 16:57:25.081 [debug] Creating authenticated Confluence client via AuthenticationManager
+2026-10-09 16:57:25.081 [debug] Normalized host: wiki.corp.adobe.com
+2026-10-09 16:57:25.081 [info] Using Personal Access Token authentication method
+2026-10-09 16:57:25.082 [info] Confluence client created successfully for host: wiki.corp.adobe.com
+2026-10-09 16:57:25.082 [info] Registered expert-wiki-editing-workflow prompt
+2026-10-09 16:57:25.082 [info] Registered expert-wiki-editor prompt
+2026-10-09 16:57:25.082 [info] Registered plantuml_diagram_creator prompt
+2026-10-09 16:57:25.083 [info] Registered prompts: expert_wiki_editing_workflow, expert_wiki_editor, plantuml_diagram_creator
+2026-10-09 16:57:25.083 [info] Prompt "expert_wiki_editing_workflow" registered: has description=true, has callback=true
+2026-10-09 16:57:25.083 [info] Prompt "expert_wiki_editor" registered: has description=true, has callback=true
+2026-10-09 16:57:25.083 [info] Prompt "plantuml_diagram_creator" registered: has description=true, has callback=true
+2026-10-09 16:57:25.083 [info] MCP Server initialized successfully
+2026-10-09 16:57:25.084 [info] Wiki MCP Server connected via stdio
+2026-10-09 16:57:25.084 [info] Wiki MCP Server started successfully with stdio transport
+2026-10-09 16:57:26.131 [info] Received SIGTERM, initiating graceful shutdown...
+2026-10-09 16:57:26.135 [debug] Starting MCP server cleanup...
+2026-10-09 16:57:26.136 [debug] Closing transport...
+2026-10-09 16:57:26.137 [info] Transport closed successfully
+2026-10-09 16:57:26.138 [debug] Closing MCP server...
+2026-10-09 16:57:26.139 [info] MCP server closed successfully
+2026-10-09 16:57:26.139 [debug] Cleanup completed successfully
+2026-10-09 16:57:26.140 [info] Graceful shutdown complete
+2026-10-09 16:57:27.287 [debug] Initializing ConfigManager from environment variables
+2026-10-09 16:57:27.288 [debug] Loaded config from environment (sensitive data redacted):
+2026-10-09 16:57:27.288 [debug] {
+  "host": "wiki.corp.adobe.com",
+  "authMethod": "[REDACTED]",
+  "port": 1984,
+  "assetsOutputDir": "./wiki-mcp/assets",
+  "assets": {
+    "extractAssets": false,
+    "outputDir": "./wiki-mcp/assets",
+    "filenamePrefix": "asset-",
+    "createOutputDirs": true,
+    "useAbsolutePath": true,
+    "assetTypes": [
+      "image",
+      "pdf",
+      "document",
+      "attachment",
+      "plantuml"
+    ]
+  }
+}
+2026-10-09 16:57:27.289 [debug] ConfigManager initialized
+2026-10-09 16:57:27.458 [info] Initializing MCP Server...
+2026-10-09 16:57:27.458 [info] 📦 Build ID: build_1780005691903_lo9dvvhel
+2026-10-09 16:57:27.459 [info] 📦 Version: 1.0.0-1780005691903
+2026-10-09 16:57:27.459 [info] 📦 Build Date: 2026-05-28T22:01:31.903Z
+2026-10-09 16:57:27.459 [info] 📦 Timestamp: 1780005691903
+2026-10-09 16:57:27.463 [debug] Creating authenticated Confluence client via AuthenticationManager
+2026-10-09 16:57:27.463 [debug] Normalized host: wiki.corp.adobe.com
+2026-10-09 16:57:27.463 [info] Using Personal Access Token authentication method
+2026-10-09 16:57:27.464 [info] Confluence client created successfully for host: wiki.corp.adobe.com
+2026-10-09 16:57:27.464 [info] Registered expert-wiki-editing-workflow prompt
+2026-10-09 16:57:27.464 [info] Registered expert-wiki-editor prompt
+2026-10-09 16:57:27.464 [info] Registered plantuml_diagram_creator prompt
+2026-10-09 16:57:27.465 [info] Registered prompts: expert_wiki_editing_workflow, expert_wiki_editor, plantuml_diagram_creator
+2026-10-09 16:57:27.465 [info] Prompt "expert_wiki_editing_workflow" registered: has description=true, has callback=true
+2026-10-09 16:57:27.465 [info] Prompt "expert_wiki_editor" registered: has description=true, has callback=true
+2026-10-09 16:57:27.465 [info] Prompt "plantuml_diagram_creator" registered: has description=true, has callback=true
+2026-10-09 16:57:27.465 [info] MCP Server initialized successfully
+2026-10-09 16:57:27.466 [info] Wiki MCP Server connected via stdio
+2026-10-09 16:57:27.466 [info] Wiki MCP Server started successfully with stdio transport
+2026-10-09 16:57:28.399 [info] Received SIGTERM, initiating graceful shutdown...
+2026-10-09 16:57:28.403 [debug] Starting MCP server cleanup...
+2026-10-09 16:57:28.406 [debug] Closing transport...
+2026-10-09 16:57:28.409 [info] Transport closed successfully
+2026-10-09 16:57:28.411 [debug] Closing MCP server...
+2026-10-09 16:57:28.412 [info] MCP server closed successfully
+2026-10-09 16:57:28.412 [debug] Cleanup completed successfully
+2026-10-09 16:57:28.413 [info] Graceful shutdown complete
+2026-10-09 16:59:21.968 [info] Received SIGTERM, initiating graceful shutdown...
+2026-10-09 16:59:21.974 [debug] Starting MCP server cleanup...
+2026-10-09 16:59:21.978 [debug] Closing transport...
+2026-10-09 16:59:21.980 [info] Transport closed successfully
+2026-10-09 16:59:21.982 [debug] Closing MCP server...
+2026-10-09 16:59:21.983 [info] MCP server closed successfully
+2026-10-09 16:59:21.984 [debug] Cleanup completed successfully
+2026-10-09 16:59:21.984 [info] Graceful shutdown complete
